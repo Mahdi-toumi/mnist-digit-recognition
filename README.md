@@ -201,7 +201,7 @@ Visualization of what the network "sees" at each layer when processing a digit.
 
 ## 👨‍💻 Author
 
-Created with ❤️ by [Your Name]
+Created with ❤️ by Mahdi TOUMI
 
 ## 📄 License
 
