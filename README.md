@@ -82,9 +82,9 @@ mnist-digit-recognition/
 ├── notebooks/
 │   └── exploration.ipynb
 ├── src/
-│   ├── model.py
-│   ├── train.py
-│   └── utils.py
+│   ├── model.py          # Définition du modèle
+│   ├── train.py          # Entraînement et évaluation
+│   └── utils.py          # Utilitaires et preprocessing
 ├── app/
 │   └── streamlit_app.py
 ├── requirements.txt
@@ -105,6 +105,19 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+```
+### Utilisation Rapide
+
+```python 
+# 1. Preprocess les données MNIST
+python main.py --mode preprocess
+
+# 2. Entraîner le modèle (20 epochs par défaut)
+python main.py --mode train
+
+# 3. Lancer l'application web
+streamlit run app/streamlit_app.py
+
 ```
 
 ### Usage
@@ -201,7 +214,7 @@ Visualization of what the network "sees" at each layer when processing a digit.
 
 ## 👨‍💻 Author
 
-Created with ❤️ by [Your Name]
+Created with ❤️ by Mahdi TOUMI
 
 ## 📄 License
 

@@ -1,94 +1,97 @@
+#!/usr/bin/env python3
 # ============================================
-# src/utils.py
+# main.py
 # ============================================
 """
-Utilitaires pour le preprocessing des données MNIST
+Script principal pour entraîner et évaluer le modèle MNIST
 """
 
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from sklearn.model_selection import train_test_split
-import pickle
+import argparse
+import sys
 import os
 
+# Ajouter le dossier src au path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-def load_and_preprocess_mnist(validation_split=0.2, save=True):
-    """
-    Charge et preprocess les données MNIST
-    
-    Args:
-        validation_split: Proportion pour validation (défaut: 0.2)
-        save: Sauvegarder les données preprocessées (défaut: True)
-    
-    Returns:
-        dict: Dictionnaire contenant toutes les données preprocessées
-    """
-    
-    print("🔄 Chargement des données MNIST...")
-    (X_train, y_train), (X_test, y_test) = keras.datasets.mnist.load_data()
-    
-    print("🔄 Normalisation...")
-    X_train = X_train.astype('float32') / 255.0
-    X_test = X_test.astype('float32') / 255.0
-    
-    print("🔄 Reshaping...")
-    X_train = X_train.reshape(-1, 28, 28, 1)
-    X_test = X_test.reshape(-1, 28, 28, 1)
-    
-    print("🔄 One-hot encoding...")
-    y_train = keras.utils.to_categorical(y_train, 10)
-    y_test = keras.utils.to_categorical(y_test, 10)
-    
-    print("🔄 Séparation train/validation...")
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train, y_train,
-        test_size=validation_split,
-        random_state=42,
-        stratify=np.argmax(y_train, axis=1)
-    )
-    
-    data = {
-        'X_train': X_train,
-        'y_train': y_train,
-        'X_val': X_val,
-        'y_val': y_val,
-        'X_test': X_test,
-        'y_test': y_test
-    }
-    
-    if save:
-        os.makedirs('data/processed', exist_ok=True)
-        with open('data/processed/mnist_preprocessed.pkl', 'wb') as f:
-            pickle.dump(data, f)
-        print("✅ Données sauvegardées!")
-    
-    print("✅ Preprocessing terminé!")
-    print(f"   Train: {X_train.shape[0]} images")
-    print(f"   Val:   {X_val.shape[0]} images")
-    print(f"   Test:  {X_test.shape[0]} images")
-    
-    return data
+from train import train_mnist_model
+from utils import load_and_preprocess_mnist, plot_sample_images, plot_class_distribution
 
 
-def load_preprocessed_data(filepath='data/processed/mnist_preprocessed.pkl'):
-    """
-    Charge les données preprocessées depuis un fichier
+def parse_arguments():
+    """Parse les arguments de ligne de commande"""
+    parser = argparse.ArgumentParser(description='MNIST Digit Recognition Training')
     
-    Args:
-        filepath: Chemin vers le fichier pickle
+    parser.add_argument('--mode', type=str, default='train',
+                       choices=['train', 'preprocess', 'visualize', 'all'],
+                       help='Mode d\'exécution')
     
-    Returns:
-        dict: Données preprocessées
-    """
-    with open(filepath, 'rb') as f:
-        data = pickle.load(f)
+    parser.add_argument('--epochs', type=int, default=20,
+                       help='Nombre d\'époques d\'entraînement')
     
-    print("✅ Données chargées depuis:", filepath)
-    return data
+    parser.add_argument('--batch_size', type=int, default=32,
+                       help='Taille du batch')
+    
+    parser.add_argument('--learning_rate', type=float, default=0.001,
+                       help='Taux d\'apprentissage')
+    
+    parser.add_argument('--save_dir', type=str, default='models/',
+                       help='Répertoire de sauvegarde')
+    
+    parser.add_argument('--no_save', action='store_true',
+                       help='Ne pas sauvegarder les données preprocessées')
+    
+    return parser.parse_args()
+
+
+def main():
+    """Fonction principale"""
+    args = parse_arguments()
+    
+    print("="*60)
+    print("🔢 MNIST Digit Recognition System")
+    print("="*60)
+    
+    if args.mode in ['preprocess', 'all']:
+        print("\n📊 Preprocessing des données...")
+        data = load_and_preprocess_mnist(save=not args.no_save)
+        
+        if args.mode == 'preprocess':
+            print("\n✅ Preprocessing terminé!")
+            return
+    
+    if args.mode in ['visualize', 'all']:
+        print("\n📈 Visualisation des données...")
+        data = load_and_preprocess_mnist(save=False)
+        plot_sample_images(data['X_train'][:10], data['y_train'][:10])
+        plot_class_distribution(data['y_train'])
+        
+        if args.mode == 'visualize':
+            print("\n✅ Visualisation terminée!")
+            return
+    
+    if args.mode in ['train', 'all']:
+        print("\n🚀 Démarrage de l\'entraînement...")
+        
+        config = {
+            'epochs': args.epochs,
+            'batch_size': args.batch_size,
+            'learning_rate': args.learning_rate,
+            'save_dir': args.save_dir
+        }
+        
+        try:
+            model, history, report = train_mnist_model(config)
+            
+            print("\n" + "="*60)
+            print("🎉 Entraînement terminé avec succès!")
+            print(f"   📊 Test Accuracy: {report['test_results']['test_accuracy']:.4f}")
+            print(f"   💾 Modèles sauvegardés dans: {args.save_dir}")
+            print("="*60)
+            
+        except Exception as e:
+            print(f"\n❌ Erreur lors de l\'entraînement: {e}")
+            sys.exit(1)
 
 
 if __name__ == "__main__":
-    # Test du script
-    data = load_and_preprocess_mnist()
-    print("\n Test réussi!")
+    main()
