@@ -172,12 +172,6 @@ print(f"Predicted digit: {digit} ({confidence:.2f}% confidence)")
 
 The first convolutional layer learns to detect basic features like edges, lines, and simple patterns.
 
-### Feature Maps Example
-
-![Feature Maps](models/feature_maps_example.png)
-
-Visualization of what the network "sees" at each layer when processing a digit.
-
 ## 📊 Confidence Analysis
 
 ![Confidence Analysis](models/confidence_analysis.png)
